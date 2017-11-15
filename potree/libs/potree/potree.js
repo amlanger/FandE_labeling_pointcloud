@@ -20426,7 +20426,10 @@ let initSidebar = function () {
     initClassificationList();
     initAnnotationDetails();
     initMeasurementDetails();
-    initSceneList();
+	
+    window.setInterval(function(){
+        initSceneList();
+    }, 3000);
     initSettings()
 
     $('#potree_version_number').html(Potree.version.major + "." + Potree.version.minor + Potree.version.suffix);
