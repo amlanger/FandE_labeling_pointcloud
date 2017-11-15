@@ -12045,6 +12045,7 @@ Potree.Volume = class extends THREE.Object3D {
 
         this.constructor.counter = (this.constructor.counter === undefined) ? 0 : this.constructor.counter + 1;
         this.name = args.name.toString();
+		this.cloudid = args.cloudid.toString();
         this._id = parseInt(args.id);
         this._clip = args.clip || false;
         this._modifiable = args.modifiable || true;
@@ -12521,7 +12522,7 @@ Potree.VolumeTool = class VolumeTool extends THREE.EventDispatcher {
               }
           }
         }
-
+		
         //Wenn eine Punktwolke existiert und diese angeklickt ist werden die Daten
         //geladen und diese gefiltert die zu der Punktwolke gehören
         if(seen){
@@ -12549,7 +12550,7 @@ Potree.VolumeTool = class VolumeTool extends THREE.EventDispatcher {
                         let rotz = arr[i * 12 + 10];
                         let cloudid = arr[i * 12 + 11];
                         let scene = viewer.scene;
-
+						
 
                         //window.alert(seen + cloudid)
                         let measurements = [scene.measurements, scene.profiles, scene.volumes].reduce((a, v) => a.concat(v));
@@ -12577,7 +12578,8 @@ Potree.VolumeTool = class VolumeTool extends THREE.EventDispatcher {
                                 scalez: geomz,
                                 rotx: rotx,
                                 roty: roty,
-                                rotz: rotz
+                                rotz: rotz,
+								cloudid: cloudid
                             })
                         }
                         else {
@@ -12592,7 +12594,13 @@ Potree.VolumeTool = class VolumeTool extends THREE.EventDispatcher {
                                     measure.scale.z = parseFloat(geomz);
                                     measure.rotation.x = parseFloat(rotx);
                                     measure.rotation.y = parseFloat(roty);
-
+									if (seen != measure.cloudid){
+				
+										measure.visible = false;
+										}
+										else{
+											measure.visible = true;
+										}
                                 }
                             }
                         }
@@ -12696,7 +12704,13 @@ Potree.VolumeTool = class VolumeTool extends THREE.EventDispatcher {
             type: "GET",
             url: "php2/getnewid.php",
             success: function (data) {
-                viewer.volumeTool.startInsertion({name: temp, id: parseInt(data)})
+				var seen;
+				for(mz = 0; mz < viewer.scene.pointclouds.length; mz++){
+					if(viewer.scene.pointclouds[mz].visible){
+						seen = viewer.scene.pointclouds[mz].name;
+					}
+				}
+                viewer.volumeTool.startInsertion({name: temp, id: parseInt(data),cloudid: seen})
             },
         });
 
@@ -12745,7 +12759,7 @@ Potree.VolumeTool = class VolumeTool extends THREE.EventDispatcher {
     startInsertion(args = {}) {
         let domElement = this.viewer.renderer.domElement;
 
-        let volume = new Potree.Volume({name: args.name, id: args.id});
+        let volume = new Potree.Volume({name: args.name, id: args.id, cloudid: args.cloudid});
         if (args.setValues) {
             volume.position.x = parseFloat(args.posx);
             volume.position.y = parseFloat(args.posy);
@@ -12865,6 +12879,7 @@ Potree.VolumeTool = class VolumeTool extends THREE.EventDispatcher {
 
         let volumes = this.viewer.scene.volumes;
         for (let volume of volumes) {
+
             let label = volume.label;
             {
                 let distance = label.position.distanceTo(camera.position);
@@ -17839,9 +17854,9 @@ function initToolbar() {
 
     // ANGLE
     viewer.volumeTool.addElemsFromDB();
-    //window.setInterval(function(){
-    //    viewer.volumeTool.addElemsFromDB();
-    //}, 3000);
+    window.setInterval(function(){
+        viewer.volumeTool.addElemsFromDB();
+    }, 3000);
 
 
     let elToolbar = $("#tools");
@@ -19680,7 +19695,7 @@ function initSceneList() {
         let title = pointcloud.name;
         let pcMaterial = pointcloud.material;
         let checked = pointcloud.visible ? "checked" : "";
-
+		
         let scenePanel = $(`
 			<span class="scene_item">
 				<!-- HEADER -->
@@ -19898,7 +19913,24 @@ function initSceneList() {
         let inputVis = scenePanel.find("input[type='checkbox']");
 
         inputVis.click(function (event) {
+		
+			//alert("clicked");
             pointcloud.visible = event.target.checked;
+		
+				var seen;
+				for(mz = 0; mz < viewer.scene.pointclouds.length; mz++){
+					if(viewer.scene.pointclouds[mz].visible ){
+				
+						if (viewer.scene.pointclouds[mz].name != pointcloud.name){
+							viewer.scene.pointclouds[mz].visible = false;
+							//alert("invisible")
+							}
+						
+						
+					}
+				}
+			
+		
             if (viewer.profileWindowController) {
                 viewer.profileWindowController.recompute();
             }
