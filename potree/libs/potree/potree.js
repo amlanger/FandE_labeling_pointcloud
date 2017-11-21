@@ -19923,6 +19923,7 @@ function initSceneList() {
 				
 						if (viewer.scene.pointclouds[mz].name != pointcloud.name){
 							viewer.scene.pointclouds[mz].visible = false;
+initSceneList();
 							//alert("invisible")
 							}
 						
@@ -20427,9 +20428,9 @@ let initSidebar = function () {
     initAnnotationDetails();
     initMeasurementDetails();
 	
-    window.setInterval(function(){
-        initSceneList();
-    }, 3000);
+    
+    initSceneList();
+    
     initSettings()
 
     $('#potree_version_number').html(Potree.version.major + "." + Potree.version.minor + Potree.version.suffix);
